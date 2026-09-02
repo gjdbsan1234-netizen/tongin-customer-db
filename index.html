@@ -25,6 +25,7 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 .customer strong{font-size:16px}.tag{display:inline-block;background:#eee;border-radius:12px;padding:4px 8px;font-size:11px;margin:3px 2px}
 .list-tools{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}.list-tools .search,.list-tools select{margin:0}
 .subtle{font-size:12px;color:#777;line-height:1.5;margin-top:-5px}.subpanel{border-top:1px solid #eee;margin-top:18px;padding-top:18px}
+.auto-save-bar{position:sticky;top:126px;z-index:3;background:#e8f5e9;border:1px solid #b7dfba;border-radius:10px;padding:10px;margin:0 0 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}.auto-save-bar span{font-size:12px;color:#2e7d32}.auto-save-bar .btn{background:#2e7d32;white-space:nowrap}
 .empty{text-align:center;color:#888;padding:30px}
 @media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.cards{grid-template-columns:1fr 1fr}.list-tools{grid-template-columns:1fr}}
 </style>
@@ -83,6 +84,7 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 <div id="parseNotice"></div>
 </div>
 <div class="subpanel" id="autoResult" style="display:none"><h2>자동 입력 결과</h2>
+<div class="auto-save-bar"><span>내용 확인 후 고객DB에 저장하세요.</span><button class="btn" type="button" onclick="saveAutoCustomer()">고객DB 저장</button></div>
 <div class="grid">
 <div><label>고객명<input id="a_name"></div>
 <div><label>연락처<input id="a_phone"></div>
@@ -96,6 +98,7 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 <div><label>견적금액<input id="a_price" type="number" placeholder="원"></div>
 <div class="full"><label>상담내용<textarea id="a_memo"></textarea></div>
 </div>
+<div class="actions"><button class="btn" type="button" onclick="saveAutoCustomer()">고객DB 저장</button><button class="btn gray" type="button" onclick="document.getElementById('autoResult').scrollIntoView({behavior:'smooth'})">결과 상단으로</button></div>
 </div></section>
 </main>
 <script>
@@ -144,12 +147,12 @@ window.parseSMS=function(){
  if(from){const m=from.match(/\((\d{1,3})\s*평\)\s*$/);if(m&&!size)size=m[1]+'평';from=from.replace(/\s*\(\d{1,3}\s*평\)\s*$/,'').trim()}
  let memo=[];
  const notice=lineAfterLabel(t,['전달사항']); if(notice) memo.push('전달사항: '+notice);
- const visit=t.match(/방문견적\s*희망일\s*\n?([^\n]+(?:\n[^\n]+)?)/i); if(visit)memo.push('방문견적 희망일: '+visit[1].trim());
+ const visit=t.match(/방문견적\s*희망일\s*\n([\s\S]*?)(?=\n\s*☎|\n\s*[-=]{2,}|$)/i); if(visit)memo.push('방문견적 희망일:\n'+visit[1].trim());
  const product=lineAfterLabel(t,['상품명']); if(product)memo.push('상품명: '+product);
  const match=lineAfterLabel(t,['매칭업체수']); if(match)memo.push('매칭업체수: '+match);
  const receive=lineAfterLabel(t,['접수일시']); if(receive)memo.push('접수일시: '+receive);
  const allOther=t.match(/본사이벤트[^\n]*/i); if(allOther)memo.push(allOther[0].trim());
- $('a_name').value=name;$('a_phone').value=phone;$('a_date').value=date;$('a_size').value=size;$('a_from').value=from;$('a_to').value=to;$('a_type').value=type;$('a_memo').value=memo.join('\n');
+ $('a_name').value=name;$('a_phone').value=phone;$('a_date').value=date;$('a_size').value=size;$('a_from').value=from;$('a_to').value=to;$('a_type').value=type;$('a_source').value=/\[통인CS\]/i.test(t)?'본사':'플랫폼';$('a_memo').value=memo.join('\n');
  $('autoResult').style.display='block';
  const missing=[];if(!name)missing.push('고객명');if(!phone)missing.push('연락처');if(!date)missing.push('이사일');if(!from)missing.push('출발지');if(!to)missing.push('도착지');
  $('parseNotice').innerHTML=missing.length?'<div style="margin-top:10px;padding:10px;border-radius:8px;background:#fff3cd;color:#856404;font-size:12px">확인 필요: '+missing.join(', ')+'<br>자동 추출 결과는 아래에서 직접 수정할 수 있습니다.</div>':'<div style="margin-top:10px;padding:10px;border-radius:8px;background:#e8f5e9;color:#2e7d32;font-size:12px">자동 추출 완료! 내용을 확인한 뒤 등록하세요.</div>';
