@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>통인 강남역삼점 고객 DB</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#f5f6f8;color:#222}
+header{background:#111;color:#fff;padding:18px 16px;position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:20px} header p{margin:5px 0 0;font-size:12px;color:#bbb}
+nav{display:flex;gap:6px;overflow:auto;padding:10px;background:#fff;border-bottom:1px solid #ddd;position:sticky;top:73px;z-index:4}
+nav button{border:0;background:#eee;border-radius:20px;padding:9px 14px;white-space:nowrap}
+nav button.active{background:#111;color:#fff}
+main{max-width:900px;margin:auto;padding:14px}
+.page{display:none}.page.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.card{background:#fff;border-radius:12px;padding:15px;box-shadow:0 1px 5px #ddd}.card small{color:#777}.card b{display:block;font-size:24px;margin-top:6px}
+.panel{background:#fff;border-radius:12px;padding:15px;margin-bottom:14px;box-shadow:0 1px 5px #ddd}
+h2{font-size:17px;margin:0 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:12px;color:#666}input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
+.btn{border:0;border-radius:8px;padding:11px 15px;background:#111;color:#fff;font-weight:bold}.btn.gray{background:#eee;color:#222}.btn.red{background:#c62828}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.search{margin-bottom:10px}.customer{border:1px solid #eee;border-radius:10px;padding:13px;margin:8px 0}
+.customer strong{font-size:16px}.tag{display:inline-block;background:#eee;border-radius:12px;padding:4px 8px;font-size:11px;margin:3px 2px}
+.empty{text-align:center;color:#888;padding:30px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.cards{grid-template-columns:1fr 1fr}}
+</style>
+<link rel="manifest" href="./manifest.json"><meta name="theme-color" content="#111111"></head>
+<body>
+<header><h1>통인 강남역삼점 고객 DB</h1><p>견적 · 계약 · 이사 고객관리 1차 버전</p></header>
+<nav>
+<button class="active" onclick="showPage('home',this)">대시보드</button>
+<button onclick="showPage('customers',this)">고객DB</button>
+<button onclick="showPage('add',this)">고객등록</button>
+<button onclick="showPage('messages',this)">문구</button>
+</nav>
+<main>
+<section id="home" class="page active">
+<div class="cards">
+<div class="card"><small>전체 고객</small><b id="total">0</b></div>
+<div class="card"><small>계약 고객</small><b id="contracts">0</b></div>
+<div class="card"><small>견적 예정</small><b id="estimate">0</b></div>
+<div class="card"><small>계약률</small><b id="rate">0%</b></div>
+</div>
+<div class="panel"><h2>최근 고객</h2><div id="recent"></div></div>
+</section>
+
+<section id="customers" class="page">
+<div class="panel"><h2>고객 DB</h2>
+<input class="search" id="search" placeholder="이름, 전화번호, 주소 검색" oninput="renderCustomers()">
+<select id="filter" onchange="renderCustomers()"><option value="">전체 상태</option><option>견적예정</option><option>견적완료</option><option>계약</option><option>보류</option><option>취소</option><option>이사완료</option></select>
+<div id="list"></div></div>
+</section>
+
+<section id="add" class="page">
+<div class="panel"><h2 id="formTitle">고객 등록</h2>
+<form id="form"><div class="grid">
+<div><label>고객명<input id="name" required></div>
+<div><label>연락처<input id="phone" required></div>
+<div><label>이사 날짜<input id="date" type="date"></div>
+<div><label>평수<input id="size" placeholder="예: 24평"></div>
+<div><label>출발지<input id="from"></div>
+<div><label>도착지<input id="to"></div>
+<div><label>이사 종류<select id="type"><option>가정이사</option><option>반포장이사</option><option>포장이사</option><option>사무실이사</option><option>기타</option></select></div>
+<div><label>유입경로<select id="source"><option>전화</option><option>네이버</option><option>소개</option><option>문자</option><option>기타</option></select></div>
+<div><label>상태<select id="status"><option>견적예정</option><option>견적완료</option><option>계약</option><option>보류</option><option>취소</option><option>이사완료</option></select></div>
+<div><label>견적금액<input id="price" type="number" placeholder="원"></div>
+<div class="full"><label>상담내용<textarea id="memo"></textarea></div>
+</div><div class="actions"><button class="btn" type="submit">저장</button><button class="btn gray" type="button" onclick="resetForm()">초기화</button></div>
+</form></div></section>
+
+<section id="messages" class="page">
+<div class="panel"><h2>고객 응대 문구</h2>
+<div class="customer"><strong>📞 부재중</strong><p id="m1">안녕하세요. 통인익스프레스 강남역삼점 허윤무 실장입니다. 연락드렸으나 부재중이셔서 문자 남겨드립니다. 편하신 시간에 연락주시면 견적 상담 도와드리겠습니다.</p><button class="btn gray" onclick="copyText('m1')">복사</button></div>
+<div class="customer"><strong>📋 견적 후 확인</strong><p id="m2">안녕하세요, 허윤무 실장입니다. 오늘 안내드린 이사 견적 관련하여 다시 한번 확인차 연락드립니다. 궁금하신 점 있으시면 편하게 말씀해주세요.</p><button class="btn gray" onclick="copyText('m2')">복사</button></div>
+<div class="customer"><strong>⭐ 후기 요청</strong><p id="m3">안녕하세요. 이사 진행해주셔서 감사합니다. 이용해보신 후 만족하셨다면 소중한 후기 한마디 남겨주시면 큰 도움이 됩니다.</p><button class="btn gray" onclick="copyText('m3')">복사</button></div>
+</div></section>
+</main>
+<script>
+let data=JSON.parse(localStorage.getItem('tonginCustomers')||'[]'), editId=null;
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem('tonginCustomers',JSON.stringify(data));updateDash();renderCustomers()}
+function showPage(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(id==='customers')renderCustomers();if(id==='home')updateDash()}
+function updateDash(){let total=data.length, c=data.filter(x=>x.status==='계약').length; $('total').textContent=total;$('contracts').textContent=c;$('estimate').textContent=data.filter(x=>x.status==='견적예정').length;$('rate').textContent=total?Math.round(c/total*100)+'%':'0%';$('recent').innerHTML=data.slice().sort((a,b)=>(b.created||0)-(a.created||0)).slice(0,5).map(card).join('')||'<div class="empty">등록된 고객이 없습니다.</div>'}
+function card(x){return `<div class="customer"><strong>${esc(x.name)}</strong> <span class="tag">${esc(x.status)}</span><br><small>${esc(x.phone)} · ${x.date||'날짜 미정'} · ${esc(x.from||'')} → ${esc(x.to||'')}</small><div class="actions"><button class="btn gray" onclick="edit('${x.id}')">수정</button><button class="btn red" onclick="del('${x.id}')">삭제</button></div></div>`}
+function renderCustomers(){let q=($('search')?.value||'').toLowerCase(), f=$('filter')?.value||'';let arr=data.filter(x=>(!f||x.status===f)&&(!q||[x.name,x.phone,x.from,x.to].join(' ').toLowerCase().includes(q)));$('list').innerHTML=arr.map(card).join('')||'<div class="empty">조건에 맞는 고객이 없습니다.</div>'}
+function edit(id){let x=data.find(a=>a.id===id);if(!x)return;editId=id;['name','phone','date','size','from','to','type','source','status','price','memo'].forEach(k=>$(k).value=x[k]||'');$('formTitle').textContent='고객 수정';showPage('add',document.querySelectorAll('nav button')[2])}
+function del(id){if(confirm('이 고객을 삭제할까요?')){data=data.filter(x=>x.id!==id);save()}}
+$('form').addEventListener('submit',e=>{e.preventDefault();let x={id:editId||Date.now().toString(),created:Date.now()};['name','phone','date','size','from','to','type','source','status','price','memo'].forEach(k=>x[k]=$(k).value);if(editId){let i=data.findIndex(a=>a.id===editId);x.created=data[i].created;data[i]=x}else data.unshift(x);save();resetForm();showPage('customers',document.querySelectorAll('nav button')[1]);alert('저장되었습니다.')});
+function resetForm(){editId=null;$('form').reset();$('formTitle').textContent='고객 등록'}
+function copyText(id){navigator.clipboard.writeText($(id).textContent).then(()=>alert('문구가 복사되었습니다.'))}
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+updateDash();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js')}</script></body>
+</html>

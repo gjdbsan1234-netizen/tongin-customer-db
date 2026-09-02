@@ -1,0 +1,9 @@
+{
+  "name": "통인 강남역삼점 고객DB",
+  "short_name": "통인 고객DB",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#111111",
+  "description": "통인 강남역삼점 견적·고객관리 앱"
+}
