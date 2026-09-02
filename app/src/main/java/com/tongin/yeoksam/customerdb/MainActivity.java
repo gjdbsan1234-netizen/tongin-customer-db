@@ -3,6 +3,8 @@ package com.tongin.yeoksam.customerdb;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
@@ -59,7 +61,28 @@ public class MainActivity extends Activity {
 
     @Override protected void onResume() {
         super.onResume();
+        if (pageReady) {
+            showReceiveStatus();
+            deliverPendingSms();
+        }
+    }
+
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
         if (pageReady) deliverPendingSms();
+    }
+
+    private void showReceiveStatus() {
+        SharedPreferences prefs = getSharedPreferences("tongin_sms", MODE_PRIVATE);
+        int count = prefs.getInt("receive_count", 0);
+        long last = prefs.getLong("last_received_at", 0L);
+        if (count == 0) {
+            Toast.makeText(this, "SMS 자동감지 준비됨 · 아직 감지 기록 없음", Toast.LENGTH_SHORT).show();
+        } else {
+            String time = new java.text.SimpleDateFormat("MM/dd HH:mm:ss", java.util.Locale.KOREA).format(new java.util.Date(last));
+            Toast.makeText(this, "SMS 감지 기록 " + count + "건 · 마지막 " + time, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void deliverPendingSms() {
