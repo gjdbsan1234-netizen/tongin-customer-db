@@ -1,10 +1,11 @@
 package com.tongin.yeoksam.customerdb;
 
-import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.provider.Settings;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
@@ -29,6 +30,7 @@ public class MainActivity extends Activity {
         setContentView(webView);
         configureWebView();
         requestNeededPermissions();
+        requestNotificationListenerAccess();
         webView.loadUrl(APP_URL);
     }
 
@@ -50,13 +52,21 @@ public class MainActivity extends Activity {
     private void requestNeededPermissions() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
         List<String> missing = new ArrayList<>();
-        if (checkSelfPermission(Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
-            missing.add(Manifest.permission.RECEIVE_SMS);
-        }
-        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            missing.add(Manifest.permission.POST_NOTIFICATIONS);
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+            missing.add("android.permission.POST_NOTIFICATIONS");
         }
         if (!missing.isEmpty()) requestPermissions(missing.toArray(new String[0]), PERMISSION_REQUEST);
+    }
+
+    private boolean hasNotificationListenerAccess() {
+        String enabled = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
+        return enabled != null && enabled.contains(getPackageName());
+    }
+
+    private void requestNotificationListenerAccess() {
+        if (hasNotificationListenerAccess()) return;
+        Toast.makeText(this, "목록에서 '통인 고객DB 문자 알림 감지'를 허용해 주세요.", Toast.LENGTH_LONG).show();
+        startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
     }
 
     @Override protected void onResume() {
@@ -78,10 +88,11 @@ public class MainActivity extends Activity {
         int count = prefs.getInt("receive_count", 0);
         long last = prefs.getLong("last_received_at", 0L);
         if (count == 0) {
-            Toast.makeText(this, "SMS 자동감지 준비됨 · 아직 감지 기록 없음", Toast.LENGTH_SHORT).show();
+            String state = hasNotificationListenerAccess() ? "알림 자동감지 준비됨" : "알림 접근 권한 필요";
+            Toast.makeText(this, state + " · 아직 감지 기록 없음", Toast.LENGTH_SHORT).show();
         } else {
             String time = new java.text.SimpleDateFormat("MM/dd HH:mm:ss", java.util.Locale.KOREA).format(new java.util.Date(last));
-            Toast.makeText(this, "SMS 감지 기록 " + count + "건 · 마지막 " + time, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "문자 알림 감지 기록 " + count + "건 · 마지막 " + time, Toast.LENGTH_LONG).show();
         }
     }
 
