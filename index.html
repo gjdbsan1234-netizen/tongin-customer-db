@@ -23,36 +23,42 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
 .search{margin-bottom:10px}.customer{border:1px solid #eee;border-radius:10px;padding:13px;margin:8px 0}
 .customer strong{font-size:16px}.tag{display:inline-block;background:#eee;border-radius:12px;padding:4px 8px;font-size:11px;margin:3px 2px}
+.list-tools{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}.list-tools .search,.list-tools select{margin:0}
+.subtle{font-size:12px;color:#777;line-height:1.5;margin-top:-5px}.subpanel{border-top:1px solid #eee;margin-top:18px;padding-top:18px}
 .empty{text-align:center;color:#888;padding:30px}
-@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.cards{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.cards{grid-template-columns:1fr 1fr}.list-tools{grid-template-columns:1fr}}
 </style>
 <link rel="manifest" href="./manifest.json"><meta name="theme-color" content="#111111"></head>
 <body>
 <header><h1>통인 강남역삼점 고객 DB</h1><p>견적 · 계약 · 이사 고객관리 1차 버전</p></header>
 <nav>
-<button class="active" onclick="showPage('home',this)">대시보드</button>
-<button onclick="showPage('customers',this)">고객DB</button>
-<button onclick="showPage('add',this)">고객등록</button>
-<button onclick="showPage('auto',this)">📩 문자자동등록</button>
-<button onclick="showPage('messages',this)">문구</button>
+<button class="active" data-page="home" onclick="showPage('home',this)">홈</button>
+<button data-page="all" onclick="showPage('all',this)">전체고객</button>
+<button data-page="estimateList" onclick="showPage('estimateList',this)">견적예정</button>
+<button data-page="unsignedList" onclick="showPage('unsignedList',this)">미계약</button>
+<button data-page="contractList" onclick="showPage('contractList',this)">계약완료</button>
+<button data-page="add" onclick="showPage('add',this)">고객등록</button>
 </nav>
 <main>
 <section id="home" class="page active">
 <div class="cards">
 <div class="card"><small>전체 고객</small><b id="total">0</b></div>
-<div class="card"><small>계약 고객</small><b id="contracts">0</b></div>
+<div class="card"><small>계약완료</small><b id="contracts">0</b></div>
 <div class="card"><small>견적 예정</small><b id="estimate">0</b></div>
-<div class="card"><small>계약률</small><b id="rate">0%</b></div>
+<div class="card"><small>미계약</small><b id="unsigned">0</b></div>
 </div>
 <div class="panel"><h2>최근 고객</h2><div id="recent"></div></div>
+<div class="panel"><h2>고객 응대 문구</h2>
+<div class="customer"><strong>📞 부재중</strong><p id="m1">안녕하세요. 통인익스프레스 강남역삼점 허윤무 실장입니다. 연락드렸으나 부재중이셔서 문자 남겨드립니다. 편하신 시간에 연락주시면 견적 상담 도와드리겠습니다.</p><button class="btn gray" onclick="copyText('m1')">복사</button></div>
+<div class="customer"><strong>📋 견적 후 확인</strong><p id="m2">안녕하세요, 허윤무 실장입니다. 오늘 안내드린 이사 견적 관련하여 다시 한번 확인차 연락드립니다. 궁금하신 점 있으시면 편하게 말씀해주세요.</p><button class="btn gray" onclick="copyText('m2')">복사</button></div>
+<div class="customer"><strong>⭐ 후기 요청</strong><p id="m3">안녕하세요. 이사 진행해주셔서 감사합니다. 이용해보신 후 만족하셨다면 소중한 후기 한마디 남겨주시면 큰 도움이 됩니다.</p><button class="btn gray" onclick="copyText('m3')">복사</button></div>
+</div>
 </section>
 
-<section id="customers" class="page">
-<div class="panel"><h2>고객 DB</h2>
-<input class="search" id="search" placeholder="이름, 전화번호, 주소 검색" oninput="renderCustomers()">
-<select id="filter" onchange="renderCustomers()"><option value="">전체 상태</option><option>견적예정</option><option>견적완료</option><option>계약</option><option>보류</option><option>취소</option><option>이사완료</option></select>
-<div id="list"></div></div>
-</section>
+<section id="all" class="page"><div class="panel"><h2>전체고객</h2><div class="list-tools"><input class="search" id="search-all" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()"><select id="sort-all" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div><div id="list-all"></div></div></section>
+<section id="estimateList" class="page"><div class="panel"><h2>견적예정 고객</h2><div class="list-tools"><input class="search" id="search-estimate" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()"><select id="sort-estimate" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div><div id="list-estimate"></div></div></section>
+<section id="unsignedList" class="page"><div class="panel"><h2>미계약 고객</h2><div class="list-tools"><input class="search" id="search-unsigned" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()"><select id="sort-unsigned" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div><div id="list-unsigned"></div></div></section>
+<section id="contractList" class="page"><div class="panel"><h2>계약완료 고객</h2><div class="list-tools"><input class="search" id="search-contract" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()"><select id="sort-contract" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div><div id="list-contract"></div></div></section>
 
 <section id="add" class="page">
 <div class="panel"><h2 id="formTitle">고객 등록</h2>
@@ -63,22 +69,20 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 <div><label>평수<input id="size" placeholder="예: 24평"></div>
 <div><label>출발지<input id="from"></div>
 <div><label>도착지<input id="to"></div>
-<div><label>이사 종류<select id="type"><option>가정이사</option><option>반포장이사</option><option>포장이사</option><option>사무실이사</option><option>기타</option></select></div>
-<div><label>유입경로<select id="source"><option>전화</option><option>네이버</option><option>소개</option><option>문자</option><option>기타</option></select></div>
-<div><label>상태<select id="status"><option>견적예정</option><option>견적완료</option><option>계약</option><option>보류</option><option>취소</option><option>이사완료</option></select></div>
+<div><label>이사 종류<select id="type"><option>스탠다드</option><option>프리미엄</option><option>반포장</option></select></div>
+<div><label>유입경로<select id="source"><option>플랫폼</option><option>소개</option><option>본사</option><option>부동산</option><option>기타</option></select></div>
+<div><label>고객상태<select id="status"><option>견적예정</option><option>미계약</option><option>계약완료</option></select></div>
 <div><label>견적금액<input id="price" type="number" placeholder="원"></div>
 <div class="full"><label>상담내용<textarea id="memo"></textarea></div>
 </div><div class="actions"><button class="btn" type="submit">저장</button><button class="btn gray" type="button" onclick="resetForm()">초기화</button></div>
-</form></div></section>
-
-<section id="auto" class="page">
-<div class="panel"><h2>📩 문자 자동등록</h2>
-<p style="font-size:12px;color:#777;line-height:1.5;margin-top:-5px">통인CS 문자를 그대로 붙여넣으면 고객명, 연락처, 이사일, 출발지, 도착지, 이사종류 등을 자동으로 찾아 기존 고객등록 화면에 넣어줍니다.</p>
+</form>
+<div class="subpanel"><h2>📩 문자 자동등록</h2>
+<p class="subtle">통인CS 문자를 그대로 붙여넣으면 고객명, 연락처, 이사일, 출발지, 도착지, 이사종류 등을 자동으로 찾아 등록할 수 있습니다.</p>
 <textarea id="smsInput" placeholder="문자 내용을 그대로 붙여넣어 주세요."></textarea>
 <div class="actions"><button class="btn" type="button" onclick="parseSMS()">자동으로 정보 추출</button><button class="btn gray" type="button" onclick="document.getElementById('smsInput').value=''">지우기</button></div>
 <div id="parseNotice"></div>
 </div>
-<div class="panel" id="autoResult" style="display:none"><h2>자동 입력 결과</h2>
+<div class="subpanel" id="autoResult" style="display:none"><h2>자동 입력 결과</h2>
 <div class="grid">
 <div><label>고객명<input id="a_name"></div>
 <div><label>연락처<input id="a_phone"></div>
@@ -87,32 +91,32 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 <div><label>출발지<input id="a_from"></div>
 <div><label>도착지<input id="a_to"></div>
 <div><label>이사 종류<input id="a_type"></div>
-<div><label>유입경로<input id="a_source" value="문자"></div>
-<div><label>상태<select id="a_status"><option>견적예정</option><option>견적완료</option><option>계약</option><option>보류</option><option>취소</option><option>이사완료</option></select></div>
+<div><label>유입경로<select id="a_source"><option>본사</option><option>플랫폼</option><option>소개</option><option>부동산</option><option>기타</option></select></div>
+<div><label>고객상태<select id="a_status"><option>견적예정</option><option>미계약</option><option>계약완료</option></select></div>
 <div><label>견적금액<input id="a_price" type="number" placeholder="원"></div>
 <div class="full"><label>상담내용<textarea id="a_memo"></textarea></div>
 </div>
-<div class="actions"><button class="btn" type="button" onclick="saveAutoCustomer()">고객DB에 등록</button><button class="btn gray" type="button" onclick="showPage('add',document.querySelectorAll('nav button')[2])">고객등록 화면에서 확인</button></div>
-</div></section>
-
-<section id="messages" class="page">
-<div class="panel"><h2>고객 응대 문구</h2>
-<div class="customer"><strong>📞 부재중</strong><p id="m1">안녕하세요. 통인익스프레스 강남역삼점 허윤무 실장입니다. 연락드렸으나 부재중이셔서 문자 남겨드립니다. 편하신 시간에 연락주시면 견적 상담 도와드리겠습니다.</p><button class="btn gray" onclick="copyText('m1')">복사</button></div>
-<div class="customer"><strong>📋 견적 후 확인</strong><p id="m2">안녕하세요, 허윤무 실장입니다. 오늘 안내드린 이사 견적 관련하여 다시 한번 확인차 연락드립니다. 궁금하신 점 있으시면 편하게 말씀해주세요.</p><button class="btn gray" onclick="copyText('m2')">복사</button></div>
-<div class="customer"><strong>⭐ 후기 요청</strong><p id="m3">안녕하세요. 이사 진행해주셔서 감사합니다. 이용해보신 후 만족하셨다면 소중한 후기 한마디 남겨주시면 큰 도움이 됩니다.</p><button class="btn gray" onclick="copyText('m3')">복사</button></div>
 </div></section>
 </main>
 <script>
 let data=JSON.parse(localStorage.getItem('tonginCustomers')||'[]'), editId=null;
 const $=id=>document.getElementById(id);
-function save(){localStorage.setItem('tonginCustomers',JSON.stringify(data));updateDash();renderCustomers()}
-function showPage(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(id==='customers')renderCustomers();if(id==='home')updateDash()}
-function updateDash(){let total=data.length, c=data.filter(x=>x.status==='계약').length; $('total').textContent=total;$('contracts').textContent=c;$('estimate').textContent=data.filter(x=>x.status==='견적예정').length;$('rate').textContent=total?Math.round(c/total*100)+'%':'0%';$('recent').innerHTML=data.slice().sort((a,b)=>(b.created||0)-(a.created||0)).slice(0,5).map(card).join('')||'<div class="empty">등록된 고객이 없습니다.</div>'}
-function card(x){return `<div class="customer"><strong>${esc(x.name)}</strong> <span class="tag">${esc(x.status)}</span><br><small>${esc(x.phone)} · ${x.date||'날짜 미정'} · ${esc(x.from||'')} → ${esc(x.to||'')}</small><div class="actions"><button class="btn gray" onclick="edit('${x.id}')">수정</button><button class="btn red" onclick="del('${x.id}')">삭제</button></div></div>`}
-function renderCustomers(){let q=($('search')?.value||'').toLowerCase(), f=$('filter')?.value||'';let arr=data.filter(x=>(!f||x.status===f)&&(!q||[x.name,x.phone,x.from,x.to].join(' ').toLowerCase().includes(q)));$('list').innerHTML=arr.map(card).join('')||'<div class="empty">조건에 맞는 고객이 없습니다.</div>'}
-function edit(id){let x=data.find(a=>a.id===id);if(!x)return;editId=id;['name','phone','date','size','from','to','type','source','status','price','memo'].forEach(k=>$(k).value=x[k]||'');$('formTitle').textContent='고객 수정';showPage('add',document.querySelectorAll('nav button')[2])}
+function save(){localStorage.setItem('tonginCustomers',JSON.stringify(data));updateDash();renderLists()}
+function navButton(page){return document.querySelector(`nav button[data-page="${page}"]`)}
+function showPage(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));(btn||navButton(id)).classList.add('active');if(id!=='add'&&id!=='home')renderLists();if(id==='home')updateDash()}
+function isContract(x){return x.status==='계약완료'||x.status==='계약'}
+function isUnsigned(x){return x.status==='미계약'||['견적완료','보류','취소'].includes(x.status)}
+function updateDash(){let total=data.length, c=data.filter(isContract).length; $('total').textContent=total;$('contracts').textContent=c;$('estimate').textContent=data.filter(x=>x.status==='견적예정').length;$('unsigned').textContent=data.filter(isUnsigned).length;$('recent').innerHTML=sortCustomers(data,'created').slice(0,5).map(card).join('')||'<div class="empty">등록된 고객이 없습니다.</div>'}
+function displayName(x){if(!x.date)return esc(x.name);const digits=x.date.replace(/\D/g,'');return esc((digits.length>=8?digits.slice(2,8):'')+x.name)}
+function card(x){return `<div class="customer"><strong>${displayName(x)}</strong> <span class="tag">${esc(x.status)}</span><br><small>${esc(x.phone)} · ${x.date||'날짜 미정'} · ${esc(x.from||'')} → ${esc(x.to||'')}</small><div class="actions"><button class="btn gray" onclick="edit('${x.id}')">수정</button><button class="btn red" onclick="del('${x.id}')">삭제</button></div></div>`}
+function sortCustomers(arr,mode){return arr.slice().sort((a,b)=>{if(mode==='moveDate'){if(!a.date&&!b.date)return (b.created||0)-(a.created||0);if(!a.date)return 1;if(!b.date)return -1;return a.date.localeCompare(b.date)||(b.created||0)-(a.created||0)}return (b.created||0)-(a.created||0)})}
+function matchesSearch(x,q){return !q||[x.name,x.phone,x.from,x.to,displayName(x).replace(/&[^;]+;/g,'')].join(' ').toLowerCase().includes(q)}
+function fillList(kind,filter){const q=($('search-'+kind)?.value||'').toLowerCase(),mode=$('sort-'+kind)?.value||'created';const arr=sortCustomers(data.filter(x=>filter(x)&&matchesSearch(x,q)),mode);$('list-'+kind).innerHTML=arr.map(card).join('')||'<div class="empty">조건에 맞는 고객이 없습니다.</div>'}
+function renderLists(){fillList('all',()=>true);fillList('estimate',x=>x.status==='견적예정');fillList('unsigned',isUnsigned);fillList('contract',isContract)}
+function syncSort(value){['all','estimate','unsigned','contract'].forEach(k=>{if($('sort-'+k))$('sort-'+k).value=value});renderLists()}
+function edit(id){let x=data.find(a=>a.id===id);if(!x)return;editId=id;['name','phone','date','size','from','to','type','source','status','price','memo'].forEach(k=>{let value=x[k]||'';if(k==='status'&&x.status==='계약')value='계약완료';if(k==='status'&&['견적완료','보류','취소'].includes(x.status))value='미계약';$(k).value=value});$('formTitle').textContent='고객 수정';showPage('add',navButton('add'))}
 function del(id){if(confirm('이 고객을 삭제할까요?')){data=data.filter(x=>x.id!==id);save()}}
-$('form').addEventListener('submit',e=>{e.preventDefault();let x={id:editId||Date.now().toString(),created:Date.now()};['name','phone','date','size','from','to','type','source','status','price','memo'].forEach(k=>x[k]=$(k).value);if(editId){let i=data.findIndex(a=>a.id===editId);x.created=data[i].created;data[i]=x}else data.unshift(x);save();resetForm();showPage('customers',document.querySelectorAll('nav button')[1]);alert('저장되었습니다.')});
+$('form').addEventListener('submit',e=>{e.preventDefault();let x={id:editId||Date.now().toString(),created:Date.now()};['name','phone','date','size','from','to','type','source','status','price','memo'].forEach(k=>x[k]=$(k).value);if(editId){let i=data.findIndex(a=>a.id===editId);x.created=data[i].created;data[i]=x}else data.unshift(x);save();resetForm();showPage('all',navButton('all'));alert('저장되었습니다.')});
 function resetForm(){editId=null;$('form').reset();$('formTitle').textContent='고객 등록'}
 function firstMatch(text, patterns){for(const p of patterns){const m=text.match(p);if(m&&m[1])return m[1].trim()}return ''}
 function normalizeDate(v){if(!v)return '';let m=v.match(/(20\d{2})\s*[\/\-.]?\s*(\d{1,2})\s*[\/\-.]?\s*(\d{1,2})/);if(!m){m=v.match(/(20\d{2})(\d{2})(\d{2})/)}return m?`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`:''}
@@ -153,11 +157,12 @@ window.parseSMS=function(){
 }
 window.saveAutoCustomer=function(){
  const x={id:Date.now().toString(),created:Date.now(),name:$('a_name').value.trim(),phone:$('a_phone').value.trim(),date:$('a_date').value,size:$('a_size').value.trim(),from:$('a_from').value.trim(),to:$('a_to').value.trim(),type:$('a_type').value.trim()||'기타',source:$('a_source').value||'문자',status:$('a_status').value,price:$('a_price').value,memo:$('a_memo').value.trim()};
- if(!x.name){alert('고객명을 확인해주세요.');return} data.unshift(x);save();alert('고객DB에 등록되었습니다.');showPage('customers',document.querySelectorAll('nav button')[1]);
+ if(!x.name){alert('고객명을 확인해주세요.');return} data.unshift(x);save();alert('고객DB에 등록되었습니다.');showPage('all',navButton('all'));
 }
 function copyText(id){navigator.clipboard.writeText($(id).textContent).then(()=>alert('문구가 복사되었습니다.'))}
 function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 updateDash();
+renderLists();
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js')}</script></body>
 </html>
