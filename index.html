@@ -25,7 +25,7 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 .customer strong{font-size:16px}.tag{display:inline-block;background:#eee;border-radius:12px;padding:4px 8px;font-size:11px;margin:3px 2px}
 .list-tools{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}.list-tools .search,.list-tools select{margin:0}
 .subtle{font-size:12px;color:#777;line-height:1.5;margin-top:-5px}.subpanel{border-top:1px solid #eee;margin-top:18px;padding-top:18px}
-.auto-save-bar{position:sticky;top:126px;z-index:3;background:#e8f5e9;border:1px solid #b7dfba;border-radius:10px;padding:10px;margin:0 0 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}.auto-save-bar span{font-size:12px;color:#2e7d32}.auto-save-bar .btn{background:#2e7d32;white-space:nowrap}
+.auto-save-bar{background:#e8f5e9;border:1px solid #b7dfba;border-radius:10px;padding:10px;margin:0 0 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}.auto-save-bar span{font-size:12px;color:#2e7d32}.auto-save-bar .btn{background:#2e7d32;white-space:nowrap}.auto-fixed-save{display:none;position:fixed;left:0;right:0;bottom:0;z-index:1000;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid #ddd;box-shadow:0 -3px 12px rgba(0,0,0,.12)}.auto-fixed-save.show{display:block}.auto-fixed-save button{width:100%;min-height:54px;border:0;border-radius:12px;background:#188038;color:#fff;font-size:17px;font-weight:700}.auto-fixed-save button:disabled{opacity:.55}.auto-result-visible main{padding-bottom:92px}
 .empty{text-align:center;color:#888;padding:30px}
 @media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.cards{grid-template-columns:1fr 1fr}.list-tools{grid-template-columns:1fr}}
 </style>
@@ -101,6 +101,7 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 <div class="actions"><button class="btn" type="button" onclick="saveAutoCustomer()">고객DB 저장</button><button class="btn gray" type="button" onclick="document.getElementById('autoResult').scrollIntoView({behavior:'smooth'})">결과 상단으로</button></div>
 </div></section>
 </main>
+<div id="autoFixedSave" class="auto-fixed-save"><button id="autoFixedSaveBtn" type="button" onclick="saveAutoCustomer()">고객DB에 등록하기</button></div>
 <script>
 let data=JSON.parse(localStorage.getItem('tonginCustomers')||'[]'), editId=null;
 const $=id=>document.getElementById(id);
@@ -153,14 +154,19 @@ window.parseSMS=function(){
  const receive=lineAfterLabel(t,['접수일시']); if(receive)memo.push('접수일시: '+receive);
  const allOther=t.match(/본사이벤트[^\n]*/i); if(allOther)memo.push(allOther[0].trim());
  $('a_name').value=name;$('a_phone').value=phone;$('a_date').value=date;$('a_size').value=size;$('a_from').value=from;$('a_to').value=to;$('a_type').value=type;$('a_source').value=/\[통인CS\]/i.test(t)?'본사':'플랫폼';$('a_memo').value=memo.join('\n');
- $('autoResult').style.display='block';
+ $('autoResult').style.display='block';$('autoFixedSave').classList.add('show');document.body.classList.add('auto-result-visible');
  const missing=[];if(!name)missing.push('고객명');if(!phone)missing.push('연락처');if(!date)missing.push('이사일');if(!from)missing.push('출발지');if(!to)missing.push('도착지');
  $('parseNotice').innerHTML=missing.length?'<div style="margin-top:10px;padding:10px;border-radius:8px;background:#fff3cd;color:#856404;font-size:12px">확인 필요: '+missing.join(', ')+'<br>자동 추출 결과는 아래에서 직접 수정할 수 있습니다.</div>':'<div style="margin-top:10px;padding:10px;border-radius:8px;background:#e8f5e9;color:#2e7d32;font-size:12px">자동 추출 완료! 내용을 확인한 뒤 등록하세요.</div>';
  $('autoResult').scrollIntoView({behavior:'smooth'});
 }
 window.saveAutoCustomer=function(){
+ const btn=$('autoFixedSaveBtn');
+ if(btn&&btn.disabled)return;
  const x={id:Date.now().toString(),created:Date.now(),name:$('a_name').value.trim(),phone:$('a_phone').value.trim(),date:$('a_date').value,size:$('a_size').value.trim(),from:$('a_from').value.trim(),to:$('a_to').value.trim(),type:$('a_type').value.trim()||'기타',source:$('a_source').value||'문자',status:$('a_status').value,price:$('a_price').value,memo:$('a_memo').value.trim()};
- if(!x.name){alert('고객명을 확인해주세요.');return} data.unshift(x);save();alert('고객DB에 등록되었습니다.');showPage('all',navButton('all'));
+ if(!x.name){alert('고객명을 확인해주세요.');$('a_name').focus();return}
+ if(!x.phone){alert('연락처를 확인해주세요.');$('a_phone').focus();return}
+ if(btn){btn.disabled=true;btn.textContent='등록 중...'}
+ try{data.unshift(x);save();$('autoFixedSave').classList.remove('show');document.body.classList.remove('auto-result-visible');$('autoResult').style.display='none';$('smsInput').value='';$('parseNotice').innerHTML='';showPage('all',navButton('all'));alert('고객DB에 등록되었습니다.')}finally{if(btn){btn.disabled=false;btn.textContent='고객DB에 등록하기'}}
 }
 function copyText(id){navigator.clipboard.writeText($(id).textContent).then(()=>alert('문구가 복사되었습니다.'))}
 function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
