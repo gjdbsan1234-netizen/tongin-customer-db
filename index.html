@@ -31,34 +31,72 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 </style>
 <link rel="manifest" href="./manifest.json"><meta name="theme-color" content="#111111"></head>
 <body>
-<header><h1>통인 강남역삼점 고객 DB</h1><p>견적 · 계약 · 이사 고객관리 1차 버전</p></header>
+<header><h1>통인 강남역삼점 고객 DB <span style="font-size:11px;font-weight:400;opacity:.65">v21</span></h1><p>견적 · 계약 · 이사 고객관리 1차 버전</p></header>
 <nav>
 <button class="active" data-page="home" onclick="showPage('home',this)">홈</button>
-<button data-page="all" onclick="showPage('all',this)">전체고객</button>
 <button data-page="estimateList" onclick="showPage('estimateList',this)">견적예정</button>
 <button data-page="unsignedList" onclick="showPage('unsignedList',this)">미계약</button>
+<button data-page="cancelList" onclick="showPage('cancelList',this)">계약취소</button>
 <button data-page="contractList" onclick="showPage('contractList',this)">계약완료</button>
-<button data-page="add" onclick="showPage('add',this)">고객등록</button>
+<button data-page="add" onclick="openCustomerRegistration(this)">고객등록</button>
 </nav>
 <main>
+
+
 <section id="home" class="page active">
-<div class="cards">
-<div class="card"><small>전체 고객</small><b id="total">0</b></div>
-<div class="card"><small>계약완료</small><b id="contracts">0</b></div>
-<div class="card"><small>견적 예정</small><b id="estimate">0</b></div>
-<div class="card"><small>미계약</small><b id="unsigned">0</b></div>
-</div>
-<div class="panel"><h2>최근 고객</h2><div id="recent"></div></div>
-<div class="panel"><h2>고객 응대 문구</h2>
-<div class="customer"><strong>📞 부재중</strong><p id="m1">안녕하세요. 통인익스프레스 강남역삼점 허윤무 실장입니다. 연락드렸으나 부재중이셔서 문자 남겨드립니다. 편하신 시간에 연락주시면 견적 상담 도와드리겠습니다.</p><button class="btn gray" onclick="copyText('m1')">복사</button></div>
-<div class="customer"><strong>📋 견적 후 확인</strong><p id="m2">안녕하세요, 허윤무 실장입니다. 오늘 안내드린 이사 견적 관련하여 다시 한번 확인차 연락드립니다. 궁금하신 점 있으시면 편하게 말씀해주세요.</p><button class="btn gray" onclick="copyText('m2')">복사</button></div>
-<div class="customer"><strong>⭐ 후기 요청</strong><p id="m3">안녕하세요. 이사 진행해주셔서 감사합니다. 이용해보신 후 만족하셨다면 소중한 후기 한마디 남겨주시면 큰 도움이 됩니다.</p><button class="btn gray" onclick="copyText('m3')">복사</button></div>
-</div>
+  <div class="panel">
+    <h2>월별 고객 현황</h2>
+
+    <div id="yearButtons" style="display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px"></div>
+
+    <h3 id="yearTitle" style="margin:8px 0 10px;font-size:16px"></h3>
+
+    <div id="monthButtons" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 14px">
+      <button class="btn gray month-btn" onclick="showMonth(1,this)">1월</button>
+      <button class="btn gray month-btn" onclick="showMonth(2,this)">2월</button>
+      <button class="btn gray month-btn" onclick="showMonth(3,this)">3월</button>
+      <button class="btn gray month-btn" onclick="showMonth(4,this)">4월</button>
+      <button class="btn gray month-btn" onclick="showMonth(5,this)">5월</button>
+      <button class="btn gray month-btn" onclick="showMonth(6,this)">6월</button>
+      <button class="btn gray month-btn" onclick="showMonth(7,this)">7월</button>
+      <button class="btn gray month-btn" onclick="showMonth(8,this)">8월</button>
+      <button class="btn gray month-btn" onclick="showMonth(9,this)">9월</button>
+      <button class="btn gray month-btn" onclick="showMonth(10,this)">10월</button>
+      <button class="btn gray month-btn" onclick="showMonth(11,this)">11월</button>
+      <button class="btn gray month-btn" onclick="showMonth(12,this)">12월</button>
+    </div>
+
+    <h3 id="monthTitle" style="margin:14px 0 10px;font-size:16px">월을 선택하세요</h3>
+
+    <div class="cards">
+      <div class="card"><small>등록고객</small><b id="mTotal">0</b></div>
+      <div class="card"><small>계약고객</small><b id="mContract">0</b></div>
+      <div class="card"><small>견적예정</small><b id="mEstimate">0</b></div>
+      <div class="card"><small>미계약</small><b id="mUnsigned">0</b></div>
+      <div class="card"><small>계약취소</small><b id="mCancelled">0</b></div>
+      <div class="card"><small>계약률</small><b id="mRate">0%</b></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px">
+      <button id="monthAllBtn" class="btn" onclick="setMonthDetail('all',this)">등록고객</button>
+      <button id="monthContractBtn" class="btn gray" onclick="setMonthDetail('contract',this)">계약고객</button>
+      <button id="monthDateBtn" class="btn gray" onclick="setMonthDetail('date',this)">이달의이사</button>
+    </div>
+
+    <div id="monthDetailTitle" style="font-weight:700;margin:14px 0 8px">등록고객</div>
+    <div id="monthCustomerList"></div>
+  </div>
 </section>
 
-<section id="all" class="page"><div class="panel"><h2>전체고객</h2><div class="list-tools"><input class="search" id="search-all" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()"><select id="sort-all" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div><div id="list-all"></div></div></section>
+
 <section id="estimateList" class="page"><div class="panel"><h2>견적예정 고객</h2><div class="list-tools"><input class="search" id="search-estimate" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()"><select id="sort-estimate" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div><div id="list-estimate"></div></div></section>
-<section id="unsignedList" class="page"><div class="panel"><h2>미계약 고객</h2><div class="list-tools"><input class="search" id="search-unsigned" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()"><select id="sort-unsigned" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div><div id="list-unsigned"></div></div></section>
+<section id="unsignedList" class="page"><div class="panel"><h2>미계약 고객</h2>
+<div class="list-tools"><input class="search" id="search-unsigned" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()"><select id="sort-unsigned" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div><div id="list-unsigned"></div></div></section>
+<section id="cancelList" class="page"><div class="panel"><h2>계약취소 고객</h2>
+<div class="list-tools"><input class="search" id="search-cancel" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()">
+<select id="sort-cancel" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div>
+<div id="list-cancel"></div></div></section>
+
 <section id="contractList" class="page"><div class="panel"><h2>계약완료 고객</h2><div class="list-tools"><input class="search" id="search-contract" placeholder="이름, 전화번호, 주소 검색" oninput="renderLists()"><select id="sort-contract" onchange="syncSort(this.value)"><option value="created">등록일자순</option><option value="moveDate">이사날짜순</option></select></div><div id="list-contract"></div></div></section>
 
 <section id="add" class="page">
@@ -71,8 +109,8 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 <div><label>출발지<input id="from"></div>
 <div><label>도착지<input id="to"></div>
 <div><label>이사 종류<select id="type"><option>스탠다드</option><option>프리미엄</option><option>반포장</option></select></div>
-<div><label>유입경로<select id="source"><option>플랫폼</option><option>소개</option><option>본사</option><option>부동산</option><option>기타</option></select></div>
-<div><label>고객상태<select id="status"><option>견적예정</option><option>미계약</option><option>계약완료</option></select></div>
+<div><label>유입경로<select id="source"><option>소개</option><option>본사</option><option>플랫폼</option><option>부동산</option><option>기타</option></select></div>
+<div><label>고객상태<select id="status"><option selected>견적예정</option><option>미계약</option><option>계약취소</option><option>계약완료</option></select></div>
 <div><label>견적금액<input id="price" type="number" placeholder="원"></div>
 <div class="full"><label>상담내용<textarea id="memo"></textarea></div>
 </div><div class="actions"><button class="btn" type="submit">저장</button><button class="btn gray" type="button" onclick="resetForm()">초기화</button></div>
@@ -93,8 +131,8 @@ textarea{min-height:80px;resize:vertical}.full{grid-column:1/-1}
 <div><label>출발지<input id="a_from"></div>
 <div><label>도착지<input id="a_to"></div>
 <div><label>이사 종류<input id="a_type"></div>
-<div><label>유입경로<select id="a_source"><option>본사</option><option>플랫폼</option><option>소개</option><option>부동산</option><option>기타</option></select></div>
-<div><label>고객상태<select id="a_status"><option>견적예정</option><option>미계약</option><option>계약완료</option></select></div>
+<div><label>유입경로<select id="a_source"><option>소개</option><option>본사</option><option>플랫폼</option><option>부동산</option><option>기타</option></select></div>
+<div><label>고객상태<select id="a_status"><option selected>견적예정</option><option>미계약</option><option>계약취소</option><option>계약완료</option></select></div>
 <div><label>견적금액<input id="a_price" type="number" placeholder="원"></div>
 <div class="full"><label>상담내용<textarea id="a_memo"></textarea></div>
 </div>
@@ -110,18 +148,282 @@ function navButton(page){return document.querySelector(`nav button[data-page="${
 function showPage(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));(btn||navButton(id)).classList.add('active');if(id!=='add'&&id!=='home')renderLists();if(id==='home')updateDash()}
 function isContract(x){return x.status==='계약완료'||x.status==='계약'}
 function isUnsigned(x){return x.status==='미계약'||['견적완료','보류','취소'].includes(x.status)}
-function updateDash(){let total=data.length, c=data.filter(isContract).length; $('total').textContent=total;$('contracts').textContent=c;$('estimate').textContent=data.filter(x=>x.status==='견적예정').length;$('unsigned').textContent=data.filter(isUnsigned).length;$('recent').innerHTML=sortCustomers(data,'created').slice(0,5).map(card).join('')||'<div class="empty">등록된 고객이 없습니다.</div>'}
+function updateDash(){
+  renderYearButtons();
+  if(selectedMonth) renderMonthSummary(selectedMonth);
+}
+
+
+let selectedMonth=null;
+let selectedYear=new Date().getFullYear();
+let monthDetailMode='all';
+
+function createdYearMonth(x){
+  const ts=Number(x.created||0);
+  if(!ts) return null;
+  const d=new Date(ts);
+  if(Number.isNaN(d.getTime())) return null;
+  return {year:d.getFullYear(), month:d.getMonth()+1};
+}
+
+function moveYearMonth(x){
+  const d=String(x.date||'').trim();
+  const m=d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? {year:Number(m[1]), month:Number(m[2])} : null;
+}
+
+function availableYears(){
+  const years=new Set([new Date().getFullYear()]);
+
+  data.forEach(x=>{
+    const created=createdYearMonth(x);
+    const move=moveYearMonth(x);
+    if(created) years.add(created.year);
+    if(move) years.add(move.year);
+  });
+
+  return [...years].sort((a,b)=>a-b);
+}
+
+function renderYearButtons(){
+  const years=availableYears();
+  if(!years.includes(selectedYear)) selectedYear=years[years.length-1];
+
+  const box=$('yearButtons');
+  if(!box) return;
+
+  box.innerHTML=years.map(y=>
+    `<button class="${y===selectedYear?'btn':'btn gray'} year-btn" onclick="selectYear(${y},this)" style="min-width:84px;white-space:nowrap">${y}년</button>`
+  ).join('');
+
+  if($('yearTitle')) $('yearTitle').textContent=selectedYear+'년 월별 등록고객 현황';
+}
+
+function selectYear(year,btn){
+  selectedYear=year;
+  selectedMonth=null;
+  monthDetailMode='all';
+
+  document.querySelectorAll('.year-btn').forEach(b=>b.className='btn gray year-btn');
+  if(btn) btn.className='btn year-btn';
+
+  document.querySelectorAll('.month-btn').forEach(b=>b.className='btn gray month-btn');
+
+  if($('yearTitle')) $('yearTitle').textContent=selectedYear+'년 월별 등록고객 현황';
+  if($('monthTitle')) $('monthTitle').textContent='월을 선택하세요';
+
+  ['mTotal','mContract','mEstimate','mUnsigned','mCancelled'].forEach(id=>{if($(id)) $(id).textContent='0';});
+  if($('mRate')) $('mRate').textContent='0%';
+  if($('monthDetailTitle')) $('monthDetailTitle').textContent='등록고객';
+  if($('monthCustomerList')) $('monthCustomerList').innerHTML='<div class="empty">확인할 월을 선택하세요.</div>';
+
+  const a=$('monthAllBtn'), c=$('monthContractBtn'), d=$('monthDateBtn');
+  if(a&&c&&d){a.className='btn';c.className='btn gray';d.className='btn gray';}
+}
+
+function registeredInMonth(x,year,month){
+  const ym=createdYearMonth(x);
+  return !!ym && ym.year===year && ym.month===month;
+}
+
+function movingInMonth(x,year,month){
+  const ym=moveYearMonth(x);
+  return !!ym && ym.year===year && ym.month===month;
+}
+
+function showMonth(month,btn){
+  selectedMonth=month;
+  monthDetailMode='all';
+
+  document.querySelectorAll('.month-btn').forEach(b=>b.className='btn gray month-btn');
+  if(btn) btn.className='btn month-btn';
+
+  const a=$('monthAllBtn'), c=$('monthContractBtn'), d=$('monthDateBtn');
+  if(a&&c&&d){a.className='btn';c.className='btn gray';d.className='btn gray';}
+
+  renderMonthSummary(month);
+}
+
+function renderMonthSummary(month){
+  const registered=sortCustomers(
+    data.filter(x=>registeredInMonth(x,selectedYear,month)),
+    'created'
+  );
+
+  const contract=registered.filter(isContract).length;
+  const estimate=registered.filter(x=>x.status==='견적예정').length;
+  const unsigned=registered.filter(isUnsigned).length;
+  const cancelled=registered.filter(x=>x.status==='계약취소').length;
+
+  const decided=contract+unsigned+cancelled;
+  const rate=decided ? Math.round((contract/decided)*100) : 0;
+
+  $('monthTitle').textContent=selectedYear+'년 '+month+'월 등록고객 현황';
+  $('mTotal').textContent=registered.length;
+  $('mContract').textContent=contract;
+  $('mEstimate').textContent=estimate;
+  $('mUnsigned').textContent=unsigned;
+  $('mCancelled').textContent=cancelled;
+  $('mRate').textContent=rate+'%';
+
+  renderMonthDetail();
+}
+
+function setMonthDetail(mode,btn){
+  monthDetailMode=mode;
+
+  const a=$('monthAllBtn'), c=$('monthContractBtn'), d=$('monthDateBtn');
+  if(a&&c&&d){
+    a.className=mode==='all'?'btn':'btn gray';
+    c.className=mode==='contract'?'btn':'btn gray';
+    d.className=mode==='date'?'btn':'btn gray';
+  }
+
+  renderMonthDetail();
+}
+
+function renderMonthDetail(){
+  if(!selectedMonth) return;
+
+  const box=$('monthCustomerList');
+  const title=$('monthDetailTitle');
+
+  const registered=sortCustomers(
+    data.filter(x=>registeredInMonth(x,selectedYear,selectedMonth)),
+    'created'
+  );
+
+  if(monthDetailMode==='contract'){
+    const contracts=registered.filter(isContract);
+    title.textContent=selectedYear+'년 '+selectedMonth+'월 등록고객 중 계약고객 ('+contracts.length+'명)';
+    box.innerHTML=contracts.length
+      ? contracts.map(card).join('')
+      : '<div class="empty">계약고객이 없습니다.</div>';
+    return;
+  }
+
+  if(monthDetailMode==='date'){
+    const moves=sortCustomers(
+      data.filter(x=>movingInMonth(x,selectedYear,selectedMonth)),
+      'moveDate'
+    );
+    title.textContent=selectedYear+'년 '+selectedMonth+'월 이달의이사 ('+moves.length+'명)';
+    box.innerHTML=moves.length
+      ? moves.map(card).join('')
+      : '<div class="empty">이달의 이사 고객이 없습니다.</div>';
+    return;
+  }
+
+  title.textContent=selectedYear+'년 '+selectedMonth+'월 등록고객 ('+registered.length+'명)';
+  box.innerHTML=registered.length
+    ? registered.map(card).join('')
+    : '<div class="empty">등록고객이 없습니다.</div>';
+}
+
 function displayName(x){if(!x.date)return esc(x.name);const digits=x.date.replace(/\D/g,'');return esc((digits.length>=8?digits.slice(2,8):'')+x.name)}
-function card(x){return `<div class="customer"><strong>${displayName(x)}</strong> <span class="tag">${esc(x.status)}</span><br><small>${esc(x.phone)} · ${x.date||'날짜 미정'} · ${esc(x.from||'')} → ${esc(x.to||'')}</small><div class="actions"><button class="btn gray" onclick="edit('${x.id}')">수정</button><button class="btn red" onclick="del('${x.id}')">삭제</button></div></div>`}
+function shortArea(addr){
+  const s=String(addr||'').trim().replace(/\s+/g,' ');
+  if(!s) return '-';
+  const parts=s.split(' ');
+  const first=parts[0]||'';
+  const second=parts[1]||'';
+
+  // 경기도/강원도/충청도/전라도/경상도/제주도 등 → 시/군 표시
+  if(/(도|특별자치도)$/.test(first) && second) return second;
+
+  // 서울/부산/대구/인천/광주/대전/울산 등 → 구/군 표시
+  if(/(특별시|광역시)$/.test(first) && second) return second;
+
+  // 세종특별자치시
+  if(first.includes('세종')) return '세종시';
+
+  // 그 외에는 앞쪽 행정구역 중 시/군/구 우선
+  const found=parts.find(p=>/(시|군|구)$/.test(p));
+  return found||first||'-';
+}
+
+function weekdayText(dateStr){
+  if(!dateStr) return '';
+  const m=String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return '';
+  const d=new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+  return ['일','월','화','수','목','금','토'][d.getDay()]||'';
+}
+
+function formatCost(v){
+  const n=Number(String(v||'').replace(/[^\d.-]/g,''));
+  if(!n) return '총비용 -';
+  if(n>=10000){
+    const man=n/10000;
+    const txt=Number.isInteger(man)?man.toLocaleString('ko-KR'):man.toLocaleString('ko-KR',{maximumFractionDigits:1});
+    return '총비용 '+txt+'만원';
+  }
+  return '총비용 '+n.toLocaleString('ko-KR')+'원';
+}
+
+function card(x){
+  const day=weekdayText(x.date);
+  const dateText=x.date ? x.date+day : '날짜 미정';
+  const route=shortArea(x.from)+'-'+shortArea(x.to);
+  return `<div class="customer"><strong>${displayName(x)}</strong> <span class="tag">${esc(x.status)}</span><br><small>${esc(x.phone)} / ${esc(dateText)} / ${esc(route)} / ${esc(formatCost(x.price))}</small><div class="actions"><button class="btn gray" onclick="edit('${x.id}')">수정</button><button class="btn red" onclick="del('${x.id}')">삭제</button></div></div>`
+}
 function sortCustomers(arr,mode){return arr.slice().sort((a,b)=>{if(mode==='moveDate'){if(!a.date&&!b.date)return (b.created||0)-(a.created||0);if(!a.date)return 1;if(!b.date)return -1;return a.date.localeCompare(b.date)||(b.created||0)-(a.created||0)}return (b.created||0)-(a.created||0)})}
 function matchesSearch(x,q){return !q||[x.name,x.phone,x.from,x.to,displayName(x).replace(/&[^;]+;/g,'')].join(' ').toLowerCase().includes(q)}
 function fillList(kind,filter){const q=($('search-'+kind)?.value||'').toLowerCase(),mode=$('sort-'+kind)?.value||'created';const arr=sortCustomers(data.filter(x=>filter(x)&&matchesSearch(x,q)),mode);$('list-'+kind).innerHTML=arr.map(card).join('')||'<div class="empty">조건에 맞는 고객이 없습니다.</div>'}
-function renderLists(){fillList('all',()=>true);fillList('estimate',x=>x.status==='견적예정');fillList('unsigned',isUnsigned);fillList('contract',isContract)}
-function syncSort(value){['all','estimate','unsigned','contract'].forEach(k=>{if($('sort-'+k))$('sort-'+k).value=value});renderLists()}
+function renderLists(){
+ fillList('estimate',x=>x.status==='견적예정');
+ fillList('unsigned',isUnsigned);
+ fillList('cancel',x=>x.status==='계약취소');
+ fillList('contract',isContract);
+}
+function syncSort(value){['estimate','unsigned','cancel','contract'].forEach(k=>{if($('sort-'+k))$('sort-'+k).value=value});renderLists()}
+
+function openCustomerRegistration(btn){
+  // 기존 고객 수정 중이 아닐 때는 항상 빈 신규등록 화면으로 시작
+  resetForm();
+  if($('smsInput')) $('smsInput').value='';
+  if($('parseNotice')) $('parseNotice').innerHTML='';
+  if($('autoResult')) $('autoResult').style.display='none';
+  document.body.classList.remove('auto-result-visible');
+  showPage('add',btn||navButton('add'));
+}
+
+function pageForStatus(status){
+ if(status==='계약완료'||status==='계약') return 'contractList';
+ if(status==='계약취소') return 'cancelList';
+ if(status==='미계약'||['견적완료','보류','취소'].includes(status)) return 'unsignedList';
+ return 'estimateList';
+}
 function edit(id){let x=data.find(a=>a.id===id);if(!x)return;editId=id;['name','phone','date','size','from','to','type','source','status','price','memo'].forEach(k=>{let value=x[k]||'';if(k==='status'&&x.status==='계약')value='계약완료';if(k==='status'&&['견적완료','보류','취소'].includes(x.status))value='미계약';$(k).value=value});$('formTitle').textContent='고객 수정';showPage('add',navButton('add'))}
 function del(id){if(confirm('이 고객을 삭제할까요?')){data=data.filter(x=>x.id!==id);save()}}
-$('form').addEventListener('submit',e=>{e.preventDefault();let x={id:editId||Date.now().toString(),created:Date.now()};['name','phone','date','size','from','to','type','source','status','price','memo'].forEach(k=>x[k]=$(k).value);if(editId){let i=data.findIndex(a=>a.id===editId);x.created=data[i].created;data[i]=x}else data.unshift(x);save();resetForm();showPage('all',navButton('all'));alert('저장되었습니다.')});
-function resetForm(){editId=null;$('form').reset();$('formTitle').textContent='고객 등록'}
+$('form').addEventListener('submit',e=>{
+  e.preventDefault();
+  let x={id:editId||Date.now().toString(),created:Date.now()};
+  ['name','phone','date','size','from','to','type','source','status','price','memo'].forEach(k=>x[k]=$(k).value);
+  if(!x.status)x.status='견적예정';
+
+  if(editId){
+    let i=data.findIndex(a=>a.id===editId);
+    x.created=data[i].created;
+    data[i]=x;
+  }else{
+    data.unshift(x);
+  }
+
+  const next=pageForStatus(x.status);
+  save();
+
+  // 저장 완료 후 신규등록 폼/문자 자동등록 영역 완전 초기화
+  resetForm();
+  if($('smsInput')) $('smsInput').value='';
+  if($('parseNotice')) $('parseNotice').innerHTML='';
+  if($('autoResult')) $('autoResult').style.display='none';
+  document.body.classList.remove('auto-result-visible');
+
+  showPage(next,navButton(next));
+  alert('저장되었습니다.');
+});
+function resetForm(){editId=null;$('form').reset();$('formTitle').textContent='고객 등록';if($('status'))$('status').value='견적예정'}
 function firstMatch(text, patterns){for(const p of patterns){const m=text.match(p);if(m&&m[1])return m[1].trim()}return ''}
 function normalizeDate(v){if(!v)return '';let m=v.match(/(20\d{2})\s*[\/\-.]?\s*(\d{1,2})\s*[\/\-.]?\s*(\d{1,2})/);if(!m){m=v.match(/(20\d{2})(\d{2})(\d{2})/)}return m?`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`:''}
 function lineAfterLabel(text, labels){
@@ -193,7 +495,7 @@ window.parseSMS=function(){
  $('a_name').value=name;$('a_phone').value=phone;$('a_date').value=date;$('a_size').value=size;$('a_from').value=from;$('a_to').value=to;$('a_type').value=type;$('a_source').value=/\[통인CS\]/i.test(t)?'본사':'플랫폼';$('a_memo').value=memo.join('\n');
  $('autoResult').style.display='block';$('autoFixedSave').classList.add('show');document.body.classList.add('auto-result-visible');
  const missing=[];if(!name)missing.push('고객명');if(!phone)missing.push('연락처');if(!date)missing.push('이사일');if(!from)missing.push('출발지');if(!to)missing.push('도착지');
- $('parseNotice').innerHTML=missing.length?'<div style="margin-top:10px;padding:10px;border-radius:8px;background:#fff3cd;color:#856404;font-size:12px">확인 필요: '+missing.join(', ')+'<br>자동 추출 결과는 아래에서 직접 수정할 수 있습니다.<br><b>버전: v10</b></div>':'<div style="margin-top:10px;padding:10px;border-radius:8px;background:#e8f5e9;color:#2e7d32;font-size:12px">자동 추출 완료! 내용을 확인한 뒤 등록하세요.<br><b>버전: v10</b></div>';
+ $('parseNotice').innerHTML=missing.length?'<div style="margin-top:10px;padding:10px;border-radius:8px;background:#fff3cd;color:#856404;font-size:12px">확인 필요: '+missing.join(', ')+'<br>자동 추출 결과는 아래에서 직접 수정할 수 있습니다.<br><b>버전: v21</b></div>':'<div style="margin-top:10px;padding:10px;border-radius:8px;background:#e8f5e9;color:#2e7d32;font-size:12px">자동 추출 완료! 내용을 확인한 뒤 등록하세요.<br><b>버전: v21</b></div>';
  $('autoResult').scrollIntoView({behavior:'smooth'});
 }
 window.saveAutoCustomer=function(){
@@ -203,12 +505,26 @@ window.saveAutoCustomer=function(){
  if(!x.name){alert('고객명을 확인해주세요.');$('a_name').focus();return}
  if(!x.phone){alert('연락처를 확인해주세요.');$('a_phone').focus();return}
  if(btn){btn.disabled=true;btn.textContent='등록 중...'}
- try{data.unshift(x);save();$('autoFixedSave').classList.remove('show');document.body.classList.remove('auto-result-visible');$('autoResult').style.display='none';$('smsInput').value='';$('parseNotice').innerHTML='';showPage('all',navButton('all'));alert('고객DB에 등록되었습니다.')}finally{if(btn){btn.disabled=false;btn.textContent='고객DB에 등록하기'}}
+ try{data.unshift(x);save();$('autoFixedSave').classList.remove('show');document.body.classList.remove('auto-result-visible');$('autoResult').style.display='none';$('smsInput').value='';$('parseNotice').innerHTML='';document.body.classList.remove('auto-result-visible');resetAutoFields();resetForm();showPage('estimateList',navButton('estimateList'));alert('고객DB에 등록되었습니다.')}finally{if(btn){btn.disabled=false;btn.textContent='고객DB에 등록하기'}}
 }
 function copyText(id){navigator.clipboard.writeText($(id).textContent).then(()=>alert('문구가 복사되었습니다.'))}
 function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 updateDash();
 renderLists();
+
+document.addEventListener('DOMContentLoaded',()=>{
+  selectedYear=new Date().getFullYear();
+  renderYearButtons();
+  updateDash();
+  renderLists();
+
+  const nowMonth=new Date().getMonth()+1;
+  const btn=[...document.querySelectorAll('.month-btn')]
+    .find(b=>b.textContent.trim()===nowMonth+'월');
+
+  showMonth(nowMonth,btn||null);
+});
+
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js')}</script></body>
 </html>
