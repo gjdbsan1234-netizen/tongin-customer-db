@@ -125,8 +125,11 @@ function resetForm(){editId=null;$('form').reset();$('formTitle').textContent='�
 function firstMatch(text, patterns){for(const p of patterns){const m=text.match(p);if(m&&m[1])return m[1].trim()}return ''}
 function normalizeDate(v){if(!v)return '';let m=v.match(/(20\d{2})\s*[\/\-.]?\s*(\d{1,2})\s*[\/\-.]?\s*(\d{1,2})/);if(!m){m=v.match(/(20\d{2})(\d{2})(\d{2})/)}return m?`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`:''}
 function lineAfterLabel(text, labels){
- const rawLines=String(text||'').replace(/\r/g,'').split('\n');
- const known=/^\s*[＊*•·▪︎■□▶▷-]?\s*(?:고객명|고객\s*성함|성함|고객전화|연락처|전화번호|출발지|현주소|출발\s*주소|이전\s*주소|도착지|후주소|도착\s*주소|새\s*주소|이사날짜|이사일|이사\s*날짜|이사종류|이사\s*종류|평형|평수|평\s*수|주거형태|전달사항|상품명|매칭업체수|접수일시)\s*[:：]?/i;
+ const source=String(text||'').replace(/\r/g,'');
+ const rawLines=source.split('\n');
+ const knownLabels='고객명|고객\s*성함|성함|고객전화|연락처|전화번호|출발지|현주소|현주소지|출발\s*주소|이전\s*주소|출발지\s*주소|도착지|후주소|후주소지|도착\s*주소|새\s*주소|도착지\s*주소|이사날짜|이사일|이사\s*날짜|이사예정일|이사종류|이사\s*종류|평형|평수|평\s*수|주거형태|전달사항|상품명|매칭업체수|접수일시';
+ const known=new RegExp('^\\s*[＊*•·▪︎■□▶▷-]?\\s*(?:'+knownLabels+')\\s*[:：]?','i');
+ // 1) 줄바꿈이 유지된 문자 형식
  for(let i=0;i<rawLines.length;i++){
   const line=rawLines[i].trim();
   for(const label of labels){
@@ -134,7 +137,6 @@ function lineAfterLabel(text, labels){
    const m=line.match(re);
    if(m){
     let value=(m[1]||'').trim();
-    // 주소가 ':' 다음 줄로 내려가거나 SMS에서 줄바꿈된 경우 이어 붙임
     let j=i+1;
     while(j<rawLines.length){
      const next=rawLines[j].trim();
@@ -146,6 +148,13 @@ function lineAfterLabel(text, labels){
     return value.trim();
    }
   }
+ }
+ // 2) 카카오톡/문자 복사 시 전체 내용이 한 줄로 붙는 형식
+ const flat=source.replace(/\s+/g,' ').trim();
+ for(const label of labels){
+  const re=new RegExp('(?:^|\\s)[＊*•·▪︎■□▶▷-]?\\s*'+label+'\\s*[:：]?\\s*(.*?)(?=\\s+(?:[＊*•·▪︎■□▶▷-]?\\s*)?(?:'+knownLabels+'|방문견적\\s*희망일)\\s*[:：]?|\\s+[▶★☎]|$)','i');
+  const m=flat.match(re);
+  if(m) return (m[1]||'').trim();
  }
  return '';
 }
@@ -164,7 +173,7 @@ window.parseSMS=function(){
  if(from){const m=from.match(/\((\d{1,3})\s*평\)\s*$/);if(m&&!size)size=m[1]+'평';from=from.replace(/\s*\(\d{1,3}\s*평\)\s*$/,'').trim()}
  let memo=[];
  const notice=lineAfterLabel(t,['전달사항']); if(notice) memo.push('전달사항: '+notice);
- const visit=t.match(/방문견적\s*희망일\s*\n([\s\S]*?)(?=\n\s*☎|\n\s*[-=]{2,}|$)/i); if(visit)memo.push('방문견적 희망일:\n'+visit[1].trim());
+ const visit=t.match(/방문견적\s*희망일\s*(?:\n|\s)+([\s\S]*?)(?=(?:\n|\s)+☎|(?:\n|\s)+[-=]{2,}|$)/i); if(visit)memo.push('방문견적 희망일:\n'+visit[1].trim());
  const product=lineAfterLabel(t,['상품명']); if(product)memo.push('상품명: '+product);
  const match=lineAfterLabel(t,['매칭업체수']); if(match)memo.push('매칭업체수: '+match);
  const receive=lineAfterLabel(t,['접수일시']); if(receive)memo.push('접수일시: '+receive);
